@@ -67,6 +67,7 @@ namespace OptionsOracle.Forms
             this.putCallRatioGraph.ScrollMinY2 = 0D;
             this.putCallRatioGraph.Size = new System.Drawing.Size(853, 469);
             this.putCallRatioGraph.TabIndex = 1;
+            this.putCallRatioGraph.UseExtendedPrintDialog = true;
             this.putCallRatioGraph.KeyUp += new System.Windows.Forms.KeyEventHandler(this.xxxGraph_KeyUp);
             this.putCallRatioGraph.MouseEnter += new System.EventHandler(this.xxxGraph_MouseEnter);
             this.putCallRatioGraph.MouseLeave += new System.EventHandler(this.xxxGraph_MouseLeave);
@@ -88,24 +89,24 @@ namespace OptionsOracle.Forms
             this.toolStripSeparator6,
             this.toolStripStatus1,
             this.toolStripLabel1});
-            this.putCallRatioToolStrip.Location = new System.Drawing.Point(3, 479);
+            this.putCallRatioToolStrip.Location = new System.Drawing.Point(3, 476);
             this.putCallRatioToolStrip.Name = "putCallRatioToolStrip";
             this.putCallRatioToolStrip.Padding = new System.Windows.Forms.Padding(0);
-            this.putCallRatioToolStrip.Size = new System.Drawing.Size(431, 28);
+            this.putCallRatioToolStrip.Size = new System.Drawing.Size(393, 31);
             this.putCallRatioToolStrip.TabIndex = 2;
             this.putCallRatioToolStrip.TabStop = true;
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 28);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripModeButton1
             // 
             this.toolStripModeButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripModeButton1.ImageTransparentColor = System.Drawing.SystemColors.Control;
             this.toolStripModeButton1.Name = "toolStripModeButton1";
-            this.toolStripModeButton1.Size = new System.Drawing.Size(94, 25);
+            this.toolStripModeButton1.Size = new System.Drawing.Size(94, 28);
             this.toolStripModeButton1.Text = "By Expiration";
             this.toolStripModeButton1.ToolTipText = "Select Graph Mode";
             this.toolStripModeButton1.Click += new System.EventHandler(this.toolStripModeButton1_Click);
@@ -113,12 +114,12 @@ namespace OptionsOracle.Forms
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 28);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 31);
             // 
             // tscbExpiryList
             // 
             this.tscbExpiryList.Name = "tscbExpiryList";
-            this.tscbExpiryList.Size = new System.Drawing.Size(121, 28);
+            this.tscbExpiryList.Size = new System.Drawing.Size(121, 31);
             this.tscbExpiryList.SelectedIndexChanged += new System.EventHandler(this.tscbExpiryList_SelectedIndexChanged);
             // 
             // toolStripDefaultScaleButton1
@@ -135,7 +136,7 @@ namespace OptionsOracle.Forms
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 28);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripInvertColorsButton1
             // 
@@ -150,17 +151,17 @@ namespace OptionsOracle.Forms
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(6, 28);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripStatus1
             // 
             this.toolStripStatus1.Name = "toolStripStatus1";
-            this.toolStripStatus1.Size = new System.Drawing.Size(0, 25);
+            this.toolStripStatus1.Size = new System.Drawing.Size(0, 28);
             // 
             // toolStripLabel1
             // 
             this.toolStripLabel1.Name = "toolStripLabel1";
-            this.toolStripLabel1.Size = new System.Drawing.Size(0, 25);
+            this.toolStripLabel1.Size = new System.Drawing.Size(0, 28);
             // 
             // PutCallRatioForm
             // 

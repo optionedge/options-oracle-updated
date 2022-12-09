@@ -47,28 +47,30 @@ namespace OptionsOracle.Forms
             // 
             // optionPainGraph
             // 
-            this.optionPainGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.optionPainGraph.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.optionPainGraph.AutoSize = true;
             this.optionPainGraph.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(48)))), ((int)(((byte)(0)))));
             this.optionPainGraph.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.optionPainGraph.Font = new System.Drawing.Font("Arial", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.optionPainGraph.ForeColor = System.Drawing.Color.Cornsilk;
-            this.optionPainGraph.Location = new System.Drawing.Point(2, 1);
+            this.optionPainGraph.Location = new System.Drawing.Point(3, 1);
+            this.optionPainGraph.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.optionPainGraph.Name = "optionPainGraph";
-            this.optionPainGraph.ScrollGrace = 0;
-            this.optionPainGraph.ScrollMaxX = 0;
-            this.optionPainGraph.ScrollMaxY = 0;
-            this.optionPainGraph.ScrollMaxY2 = 0;
-            this.optionPainGraph.ScrollMinX = 0;
-            this.optionPainGraph.ScrollMinY = 0;
-            this.optionPainGraph.ScrollMinY2 = 0;
-            this.optionPainGraph.Size = new System.Drawing.Size(640, 381);
+            this.optionPainGraph.ScrollGrace = 0D;
+            this.optionPainGraph.ScrollMaxX = 0D;
+            this.optionPainGraph.ScrollMaxY = 0D;
+            this.optionPainGraph.ScrollMaxY2 = 0D;
+            this.optionPainGraph.ScrollMinX = 0D;
+            this.optionPainGraph.ScrollMinY = 0D;
+            this.optionPainGraph.ScrollMinY2 = 0D;
+            this.optionPainGraph.Size = new System.Drawing.Size(853, 469);
             this.optionPainGraph.TabIndex = 1;
+            this.optionPainGraph.UseExtendedPrintDialog = true;
             this.optionPainGraph.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.xxxGraph_MouseMoveEvent);
-            this.optionPainGraph.MouseEnter += new System.EventHandler(this.xxxGraph_MouseEnter);
             this.optionPainGraph.KeyUp += new System.Windows.Forms.KeyEventHandler(this.xxxGraph_KeyUp);
+            this.optionPainGraph.MouseEnter += new System.EventHandler(this.xxxGraph_MouseEnter);
             this.optionPainGraph.MouseLeave += new System.EventHandler(this.xxxGraph_MouseLeave);
             // 
             // optionPainToolStrip
@@ -76,6 +78,7 @@ namespace OptionsOracle.Forms
             this.optionPainToolStrip.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.optionPainToolStrip.Dock = System.Windows.Forms.DockStyle.None;
             this.optionPainToolStrip.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.optionPainToolStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.optionPainToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripSeparator1,
             this.toolStripExpDateLabel,
@@ -87,28 +90,28 @@ namespace OptionsOracle.Forms
             this.toolStripSeparator4,
             this.toolStripStatus,
             this.toolStripLabel});
-            this.optionPainToolStrip.Location = new System.Drawing.Point(2, 385);
+            this.optionPainToolStrip.Location = new System.Drawing.Point(3, 476);
             this.optionPainToolStrip.Name = "optionPainToolStrip";
             this.optionPainToolStrip.Padding = new System.Windows.Forms.Padding(0);
-            this.optionPainToolStrip.Size = new System.Drawing.Size(400, 27);
+            this.optionPainToolStrip.Size = new System.Drawing.Size(431, 31);
             this.optionPainToolStrip.TabIndex = 2;
             this.optionPainToolStrip.TabStop = true;
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripExpDateLabel
             // 
             this.toolStripExpDateLabel.Name = "toolStripExpDateLabel";
-            this.toolStripExpDateLabel.Size = new System.Drawing.Size(82, 24);
+            this.toolStripExpDateLabel.Size = new System.Drawing.Size(108, 28);
             this.toolStripExpDateLabel.Text = "Expiration Date:";
             // 
             // toolStripExpDateButton
             // 
             this.toolStripExpDateButton.Name = "toolStripExpDateButton";
-            this.toolStripExpDateButton.Size = new System.Drawing.Size(110, 27);
+            this.toolStripExpDateButton.Size = new System.Drawing.Size(145, 31);
             this.toolStripExpDateButton.Text = "By Expiration";
             this.toolStripExpDateButton.ToolTipText = "Select Expiration Date";
             this.toolStripExpDateButton.SelectedIndexChanged += new System.EventHandler(this.toolStripExpDateButton_SelectedIndexChanged);
@@ -116,7 +119,7 @@ namespace OptionsOracle.Forms
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripDefaultScaleButton
             // 
@@ -132,7 +135,7 @@ namespace OptionsOracle.Forms
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripInvertColorsButton
             // 
@@ -147,27 +150,28 @@ namespace OptionsOracle.Forms
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 27);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(6, 31);
             // 
             // toolStripStatus
             // 
             this.toolStripStatus.Name = "toolStripStatus";
-            this.toolStripStatus.Size = new System.Drawing.Size(0, 24);
+            this.toolStripStatus.Size = new System.Drawing.Size(0, 28);
             // 
             // toolStripLabel
             // 
             this.toolStripLabel.Name = "toolStripLabel";
-            this.toolStripLabel.Size = new System.Drawing.Size(0, 24);
+            this.toolStripLabel.Size = new System.Drawing.Size(0, 28);
             // 
             // OptionPainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(642, 412);
+            this.ClientSize = new System.Drawing.Size(856, 507);
             this.Controls.Add(this.optionPainToolStrip);
             this.Controls.Add(this.optionPainGraph);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "OptionPainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Tag = "Total Underlying Option Pain (Max Pain)";

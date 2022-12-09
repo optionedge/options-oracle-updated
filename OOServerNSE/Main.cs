@@ -29,12 +29,18 @@ using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using System.Web.Script.Serialization;
+using RestSharp;
 
 
 using OOServerLib.Web;
 using OOServerLib.Interface;
 using OOServerLib.Global;
 using OOServerLib.Config;
+using OOServerNSE.Models;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium;
+using Newtonsoft.Json;
+using System.Linq;
 
 namespace OOServerNSE
 {
@@ -73,6 +79,29 @@ namespace OOServerNSE
             wbf = new WebForm();
             wbf.Show();
             wbf.Hide();
+
+            StartWebDriver();
+
+        }
+
+        private void StartWebDriver()
+        {
+            ChromeOptions options = new ChromeOptions();
+
+            options.AddArgument("headless");
+            options.AddArgument("window-size=1200x600");
+            options.AddArguments("start-maximized");
+            options.AddArguments("disable-infobars");
+            options.AddArguments("--disable-blink-features=AutomationControlled");
+            options.AddArgument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
+
+
+            _driver = new ChromeDriver(options);
+
+
+            _driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(15);
+
+            _driver.Navigate().GoToUrl("https://www.nseindia.com/");
         }
 
         public void Initialize(string config)
@@ -98,14 +127,14 @@ namespace OOServerNSE
         // get server assembly data
         public string Author { get { return "Shlomo Shachar"; } }
         public string Description { get { return "Delayed Quote for NSE Exchange"; } }
-        public string Name 
-        { 
-            get 
+        public string Name
+        {
+            get
             {
                 System.Version oVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
                 string version = String.Format("{0}.{1}.{2}", oVersion.Major, oVersion.Minor, oVersion.Build);
-                return "PlugIn Server India (NSE) v" + version; 
-            } 
+                return "PlugIn Server India (NSE) v" + version;
+            }
         }
         public string Version { get { return Assembly.GetExecutingAssembly().GetName().Version.ToString(); } }
 
@@ -214,7 +243,7 @@ namespace OOServerNSE
                 case "^BANKNIFTY":
                     return "^NSEBANK";
                 case "^CNXIT":
-                    return "^NSMIDCP";                    
+                    return "^NSMIDCP";
                 default:
                     return ticker + suffix;
             }
@@ -228,158 +257,216 @@ namespace OOServerNSE
 
         private void ExecuteDL(FileDownload dl)
         {
-          dl.Execute();
+            dl.Execute();
         }
-        public string GenericDownload(string Url, string Referrer="")
+        public string GenericDownload(string Url, string Referrer = "")
         {
-          
+            // first, get the URL
+            FileDownload dl = new FileDownload();
+            dl.downloadMethod = DownloadMethod.Get;
+            dl.SourceURL = Url;
+            if (Referrer != "")
+            {
+                dl.AddReferrer = true;
+                dl.Referrer = Referrer;
+            }
 
-          return "";
+            ExecuteDL(dl);
+
+            StreamReader sr = new StreamReader(dl.memStream);
+            string sBaseHTML = sr.ReadToEnd();
+            sr.Close();
+
+            return sBaseHTML;
         }
+
+        ChromeDriver _driver = null;
 
         public Quote GetQuote(string ticker)
         {
-          ticker = CorrectSymbol(ticker);
+            ticker = CorrectSymbol(ticker);
 
-          Quote q = new Quote();
-            //q.name = "NIFTY 50";
-            q.name = "NIFTY";
-            q.stock = ticker;
-            q.update_timestamp = DateTime.Now;
 
-            q.price.last = 45.045;
-            q.price.open = 23.32;
-            q.price.high = 56.44;
-            q.price.low = 19.43;
+            string allindicesUrl = "https://www.nseindia.com/api/allIndices";
 
-            q.price.change = 3;
+            Quote q = null;
 
-            q.price.bid = double.NaN;
-            q.price.ask = double.NaN;
-
-            q.volume.total = double.NaN;
-
-            return q;
-
-          if (ticker.StartsWith("^"))
-          {
-            //http://www.nseindia.com/homepage/Indices1.json
-            //get json from http://www.nseindia.com/live_market/dynaContent/live_watch/stock_watch/liveIndexWatchData.json
-            string json = GenericDownload(@"http://www.nseindia.com/live_market/dynaContent/live_watch/stock_watch/liveIndexWatchData.json");
-
-            var jss = new JavaScriptSerializer();
-            var dict = jss.Deserialize<dynamic>(json);
-
-            dynamic indexes = dict["data"];
-            for (int i = 0; i < indexes.Length; i++)
+            try
             {
-              if (indexes[i]["indexName"].ToUpper().Trim() == IndexName(ticker).ToUpper())
-              {
+                //var client = new RestClient(allindicesUrl);
+
+                //var request = new RestRequest();
+                //var response = client.GetAsync<NSEQuote>(request, CancellationToken.None).Result;
+
+                string callApiJS = @"
+                    var callback = arguments[arguments.length - 1];
+
+                    $.ajax({
+                        url: '{url}',
+                        method: 'GET',
+                        success: function(data){
+                          console.log('succes: ' + data);
+                          callback(JSON.stringify(data));
+                        }
+                      });                    
+                ";
+
+                callApiJS = callApiJS
+                    .Replace("{url}", allindicesUrl);
+
+                object retValue = null;
+
+                retValue = ((IJavaScriptExecutor)_driver).ExecuteAsyncScript(callApiJS);
+
+
+                var nseQuote = JsonConvert.DeserializeObject<NSEQuote>(retValue.ToString());
+
+                var quote = nseQuote.data.Where(x => x.index == IndexName(ticker).ToUpper()).FirstOrDefault();
+
+                if (quote == null) return null;
+
                 q = new Quote();
-                dynamic thisIndex = indexes[i];
 
-                q.name = indexes[i]["indexName"];
+                q.name = IndexName(ticker).ToUpper();
                 q.stock = ticker;
-                q.update_timestamp = DateTime.ParseExact(thisIndex["timeVal"], "MMM dd, yyyy HH:mm:ss", null);
+                q.update_timestamp = DateTime.Now;
 
-                q.price.last = Convert.ToDouble(thisIndex["last"]);
-                q.price.open = Convert.ToDouble(thisIndex["open"]);
-                q.price.high = Convert.ToDouble(thisIndex["high"]);
-                q.price.low = Convert.ToDouble(thisIndex["low"]);
+                q.price.last = quote.last;
+                q.price.open = quote.open;
+                q.price.high = quote.high;
+                q.price.low = quote.low;
 
-                q.price.change = q.price.last - Convert.ToDouble(thisIndex["previousClose"]);
+                q.price.change = q.price.last - quote.previousClose; 
 
                 q.price.bid = double.NaN;
                 q.price.ask = double.NaN;
 
                 q.volume.total = double.NaN;
 
-                break;
-              }
+                #region old
+
+                //if (ticker.StartsWith("^"))
+                //{
+                //    //http://www.nseindia.com/homepage/Indices1.json
+                //    //get json from http://www.nseindia.com/live_market/dynaContent/live_watch/stock_watch/liveIndexWatchData.json
+                //    string json = GenericDownload(@"http://www.nseindia.com/live_market/dynaContent/live_watch/stock_watch/liveIndexWatchData.json");
+
+                //    var jss = new JavaScriptSerializer();
+                //    var dict = jss.Deserialize<dynamic>(json);
+
+                //    dynamic indexes = dict["data"];
+                //    for (int i = 0; i < indexes.Length; i++)
+                //    {
+                //        if (indexes[i]["indexName"].ToUpper().Trim() == IndexName(ticker).ToUpper())
+                //        {
+                //            q = new Quote();
+                //            dynamic thisIndex = indexes[i];
+
+                //            q.name = indexes[i]["indexName"];
+                //            q.stock = ticker;
+                //            q.update_timestamp = DateTime.ParseExact(thisIndex["timeVal"], "MMM dd, yyyy HH:mm:ss", null);
+
+                //            q.price.last = Convert.ToDouble(thisIndex["last"]);
+                //            q.price.open = Convert.ToDouble(thisIndex["open"]);
+                //            q.price.high = Convert.ToDouble(thisIndex["high"]);
+                //            q.price.low = Convert.ToDouble(thisIndex["low"]);
+
+                //            q.price.change = q.price.last - Convert.ToDouble(thisIndex["previousClose"]);
+
+                //            q.price.bid = double.NaN;
+                //            q.price.ask = double.NaN;
+
+                //            q.volume.total = double.NaN;
+
+                //            break;
+                //        }
+                //    }
+                //}
+                //else
+                //{
+                //    string json = GenericDownload(String.Format(@"http://www.nseindia.com/live_market/dynaContent/live_watch/get_quote/ajaxGetQuoteJSON.jsp?symbol={0}&series=EQ", ticker));
+
+                //    var jss = new JavaScriptSerializer();
+                //    var dict = jss.Deserialize<dynamic>(json);
+
+                //    dynamic stock = dict["data"];
+                //    if (stock.Length == 0) return null;
+
+                //    q = new Quote();
+                //    dynamic thisStock = stock[0];
+
+                //    q.name = thisStock["companyName"];
+                //    q.stock = ticker;
+                //    q.update_timestamp = DateTime.ParseExact(dict["lastUpdateTime"], "dd-MMM-yyyy HH:mm:ss", null);
+
+                //    q.price.last = Convert.ToDouble(thisStock["lastPrice"]);
+                //    q.price.open = Convert.ToDouble(thisStock["open"]);
+                //    q.price.high = Convert.ToDouble(thisStock["dayHigh"]);
+                //    q.price.low = Convert.ToDouble(thisStock["dayLow"]);
+
+                //    q.price.change = Convert.ToDouble(thisStock["change"]);
+
+                //    q.price.ask = thisStock["sellPrice1"].Trim() == "-" ? double.NaN : Convert.ToDouble(thisStock["sellPrice1"]);
+                //    q.price.bid = thisStock["buyPrice1"].Trim() == "-" ? double.NaN : Convert.ToDouble(thisStock["buyPrice1"]);
+                //    q.volume.total = Convert.ToDouble(thisStock["totalTradedVolume"]);
+
+                //}
+
+                #endregion
+
             }
-          }
-          else
-          {
-            string json = GenericDownload(String.Format(@"http://www.nseindia.com/live_market/dynaContent/live_watch/get_quote/ajaxGetQuoteJSON.jsp?symbol={0}&series=EQ", ticker));
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
 
-            var jss = new JavaScriptSerializer();
-            var dict = jss.Deserialize<dynamic>(json);
-
-            dynamic stock = dict["data"];
-            if (stock.Length == 0) return null;
-
-            q = new Quote();
-            dynamic thisStock = stock[0];
-
-            q.name = thisStock["companyName"];
-            q.stock = ticker;
-            q.update_timestamp = DateTime.ParseExact(dict["lastUpdateTime"], "dd-MMM-yyyy HH:mm:ss", null);
-
-            q.price.last = Convert.ToDouble(thisStock["lastPrice"]);
-            q.price.open = Convert.ToDouble(thisStock["open"]);
-            q.price.high = Convert.ToDouble(thisStock["dayHigh"]);
-            q.price.low = Convert.ToDouble(thisStock["dayLow"]);
-
-            q.price.change = Convert.ToDouble(thisStock["change"]);
-
-            q.price.ask = thisStock["sellPrice1"].Trim() == "-" ? double.NaN : Convert.ToDouble(thisStock["sellPrice1"]);
-            q.price.bid = thisStock["buyPrice1"].Trim() == "-" ? double.NaN : Convert.ToDouble(thisStock["buyPrice1"]);
-            q.volume.total = Convert.ToDouble(thisStock["totalTradedVolume"]);
-
-          }
-          return q;
+            return q;
         }
 
         // get stock latest options chain
         public ArrayList GetOptionsChain(string ticker)
         {
-          // correct symbol
-          ticker = CorrectSymbol(ticker);
+            // correct symbol
+            ticker = CorrectSymbol(ticker);
 
-       
-            // HtmlNodeCollection expDates = hag.DocumentNode.SelectNodes(@"//select[@id=""date""]/option");
             ArrayList options_list = new ArrayList();
             options_list.Clear();
             options_list.Capacity = 1024;
 
-            List<string> expDates = new List<string>();
-            expDates.Add("13-Oct-2022");
-            for (int d = 0; d < expDates.Count; d++)
+            // option chain url
+            string url = "https://www.nseindia.com/api/option-chain-indices?symbol=" + ticker.TrimStart(new char[] { '^' });
+
+            string callApiJS = @"
+                    var callback = arguments[arguments.length - 1];
+
+                    $.ajax({
+                        url: '{url}',
+                        method: 'GET',
+                        success: function(data){
+                          console.log('succes: ' + data);
+                          callback(JSON.stringify(data));
+                        }
+                      });                    
+                ";
+
+            callApiJS = callApiJS
+                .Replace("{url}", url);
+
+            object retValue = null;
+
+            retValue = ((IJavaScriptExecutor)_driver).ExecuteAsyncScript(callApiJS);
+
+            var nseOptionChain = JsonConvert.DeserializeObject<NSEOptionChain>(retValue.ToString());
+
+            if (nseOptionChain == null) return null;
+
+            foreach (var item in nseOptionChain.records.data)
             {
                 try
                 {
-                    //string expDate = expDates[d].GetAttributeValue("value", "");
-                    //if (expDate == "") continue;
-                    DateTime expiry = DateTime.Parse(expDates[d]);
 
-                    //if (ticker.StartsWith("^"))
-                    //    //url = string.Format(@"http://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?symbol={0}&instrument=OPTIDX&date={1}", ticker.TrimStart(new char[] { '^' }), expDate);
-                    //    url = string.Format(@"https://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?segmentLink=17&instrument=OPTIDX&symbol={0}&date={1}", ticker.TrimStart(new char[] { '^' }), expDate);
-                    //else
-                    //    url = string.Format(@"http://www.nseindia.com/live_market/dynaContent/live_watch/option_chain/optionKeys.jsp?symbol={0}&instrument=OPTSTK&date={1}", ticker.TrimStart(new char[] { '^' }), expDate);
-
-                    //HtmlNodeCollection allLinks = null;
-                    //// get page
-                    //for (int tries = 0; tries < 3; tries++)
-                    //{
-                    //    html = GenericDownload(url, @"https://www.nseindia.com/index_nse.htm");
-                    //    hag.LoadHtml(html);
-
-                    //    // now get each?
-                    //    //*[@id="wrapper_btm"]/div[3]/table/tbody/tr[12]
-                    //    allLinks = hag.DocumentNode.SelectNodes(@"//div[@class=""opttbldata""]/table/tr");
-                    //    if (allLinks != null) break;
-                    //}
-                    //// for each tr starting from #3
-                    //if (allLinks == null) continue;
-
-                    var strikeStart = 17100;
-
-                    for (int i = 0; i < 10 ; i++)
+                    if (item.CE != null)
                     {
-                        // each td has info now
-                        // a call and a put
-                        //HtmlNodeCollection tds = allLinks[i].SelectNodes("td");
                         Option option = new Option(); //call
 
                         // option stock ticker and number of stocks per contract
@@ -389,22 +476,27 @@ namespace OOServerNSE
 
                         // option type
                         option.type = "Call";
-                        option.expiration = expiry;
-                        string strikeprice = strikeStart.ToString();
-                        SetDouble(strikeprice, out option.strike);
+                        option.expiration = DateTime.Parse(item.expiryDate);
+                        option.strike = item.strikePrice;
+                        option.open_int = int.Parse(item.CE.openInterest.ToString());
 
-                        option.open_int = 3422;
+                        option.symbol = ticker.TrimStart(new char[] { '^' }) + item.expiryDate + item.strikePrice + "CE";
 
-                        option.symbol = ticker.TrimStart(new char[] { '^' }) + expDates[d] + strikeprice + "CE";
+                        option.volume.total = item.CE.totalTradedVolume;
 
-                        option.volume.total = 4433;
-                        option.price.last = 434;
-                        option.price.change = 3211;
-                        option.price.bid = 555;
-                        option.price.ask = 5300;
+                        option.price.last = item.CE.lastPrice;
+                        option.price.change = item.CE.change;
+
+                        option.price.bid = item.CE.bidprice;
+                        option.price.ask = item.CE.askPrice;
+
                         options_list.Add(option);
+                    }
 
-                        option = new Option(); //put
+                    if (item.PE != null)
+                    {
+
+                        var option = new Option(); //Put
 
                         // option stock ticker and number of stocks per contract
                         option.stock = ticker;
@@ -413,49 +505,47 @@ namespace OOServerNSE
 
                         // option type
                         option.type = "Put";
-                        option.expiration = expiry;
-                        SetDouble(strikeprice, out option.strike);
+                        option.expiration = DateTime.Parse(item.expiryDate);
+                        option.strike = item.strikePrice;
+                        option.open_int = int.Parse(item.PE.openInterest.ToString());
 
-                        option.open_int = 3222;
+                        option.symbol = ticker.TrimStart(new char[] { '^' }) + item.expiryDate + item.strikePrice + "PE";
 
-                        option.symbol = ticker.TrimStart(new char[] { '^' }) + expDates[d] + strikeprice + "PE";
+                        option.volume.total = item.PE.totalTradedVolume;
 
-                        option.volume.total = 444;
-                        option.price.last = 4342;
-                        option.price.change = 9888;
-                        option.price.bid = 4443;
-                        option.price.ask =4433;
+                        option.price.last = item.PE.lastPrice;
+                        option.price.change = item.PE.change;
+
+                        option.price.bid = item.PE.bidprice;
+                        option.price.ask = item.PE.askPrice;
+
                         options_list.Add(option);
-
-                        strikeStart += 100;
                     }
-
                 }
-                catch(Exception e)
+                catch (Exception ex)
                 {
                     ;
                 }
             }
-
 
             return options_list;
         }
 
         private string RemoveComments(string p)
         {
-          int i = p.IndexOf("-->");
-          if (i >= 0)
-            return p.Substring(i + 3).Trim();
-          else
-            return p;
+            int i = p.IndexOf("-->");
+            if (i >= 0)
+                return p.Substring(i + 3).Trim();
+            else
+                return p;
         }
 
         private void SetDouble(string s, out double d)
         {
-          d = 0;
-          s = s.Replace(",", "");
-          if (s != "-")
-            double.TryParse(s, out d);
+            d = 0;
+            s = s.Replace(",", "");
+            if (s != "-")
+                double.TryParse(s, out d);
 
         }
 
@@ -853,10 +943,37 @@ namespace OOServerNSE
         // get stock name lookup results
         public ArrayList GetStockSymbolLookup(string name)
         {
+            string lookup_url = @"http://finance.yahoo.com/lookup?s=" + name.Replace(suffix, "") + @"&t=S&m=ALL";
+
+            XmlDocument xml = cap.DownloadXmlWebPage(lookup_url);
+            if (xml == null) return null;
+
             ArrayList symbol_list = new ArrayList();
             symbol_list.Capacity = 256;
 
-            symbol_list.Add("NIFTY");
+            for (int i = 0; i < symbol_list.Capacity; i++)
+            {
+                string entry = "";
+
+                XmlNode nd, root_node = prs.GetXmlNodeByPath(xml.FirstChild, @"body\div\br\br\table\tr(3)\td\table(2)\tr(3)\td\table\tr\td\table\tr(" + (i + 2).ToString() + @")");
+                if (root_node == null) break;
+
+                // stock name
+                nd = prs.GetXmlNodeByPath(root_node, @"td(2)");
+                if (nd == null) break;
+                entry = nd.InnerText.Replace('(', '[').Replace(')', ']');
+
+                // stock ticker
+                nd = prs.GetXmlNodeByPath(root_node, @"td(1)\a");
+                if (nd == null) break;
+
+                int x = nd.InnerText.IndexOf('.');
+                if (x >= 0) entry += nd.InnerText.Substring(0, x);
+                else entry += " (" + nd.InnerText + ")";
+
+                // add name + ticker entry
+                if (entry.Contains(suffix)) symbol_list.Add(entry.Replace(suffix, ""));
+            }
 
             symbol_list.TrimToSize();
             return symbol_list;

@@ -279,11 +279,13 @@ namespace OptionsOracle.Calc.Options
 
                     // volatility
                     double volatility = at_volatility;
-                    if (double.IsNaN(volatility) && row["Volatility"] != DBNull.Value) volatility = (double)row["Volatility"] * 0.01;
+                    if (double.IsNaN(volatility) && row["Volatility"] != DBNull.Value) 
+                        volatility = (double)row["Volatility"] * 0.01;
 
                     // time to expiration
                     double time = 0;
-                    if (row["Expiration"] != DBNull.Value) time = (double)((TimeSpan)((DateTime)row["Expiration"] - at_date)).TotalDays / 365.0;
+                    if (row["Expiration"] != DBNull.Value) 
+                        time = (double)((TimeSpan)((DateTime)row["Expiration"] - at_date)).TotalDays / 365.0;
 
                     // federal interest
                     double dividend_rate = core.StockDividendRate;
